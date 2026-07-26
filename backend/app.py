@@ -83,8 +83,19 @@ async def upload_image(file: UploadFile = File(...)):
     filename = f"{uuid.uuid4()}{ext}"
     filepath = os.path.join(TEMP_DIR, filename)
 
+    contents = await file.read()
     with open(filepath, "wb") as f:
-        f.write(await file.read())
+        f.write(contents)
+
+    # Optimize image resolution to max 720p for fast Chromium rendering
+    try:
+        from PIL import Image
+        with Image.open(filepath) as img:
+            if img.width > 720 or img.height > 720:
+                img.thumbnail((720, 720), Image.Resampling.LANCZOS)
+                img.save(filepath, optimize=True)
+    except Exception as e:
+        print(f"Image optimization warning: {e}")
 
     return {"image_name": filename}
 
