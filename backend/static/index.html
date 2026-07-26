@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Style — Sticker Video Generator</title>
+    <link rel="stylesheet" href="/static/flowstate.css">
+</head>
+<body>
+    <div class="bg-canvas"></div>
+    <div class="scrim-overlay"></div>
+
+    <div class="app-viewport">
+        <!-- Header -->
+        <header class="header-nav reveal">
+            <a href="/" class="brand-logo">
+                <span>🌊</span> Sticker Video
+            </a>
+            <a href="/sticker" class="btn-pill btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.9rem;">
+                Get Started
+            </a>
+        </header>
+
+        <!-- Main Hero -->
+        <main>
+            <div id="colab-banner" class="offline-banner hidden reveal">
+                ⚠ Colab / Backend service is currently offline!
+            </div>
+
+            <div class="reveal" style="text-align: center; margin-top: 1rem;">
+                <div class="hero-badge">
+                    <span>🎬</span> Choose Animation Template
+                </div>
+                <h1>Which style do you want?</h1>
+                <p class="subtitle">Select your preferred video creation style to begin rendering</p>
+            </div>
+
+            <!-- Style Selector Grid -->
+            <div class="style-grid">
+                <!-- Sticker Style (Active) -->
+                <div class="glass style-card reveal">
+                    <div>
+                        <div class="hero-badge" style="margin-bottom: 0.75rem;">Active Style</div>
+                        <h2 class="style-title">Sticker Style</h2>
+                        <p class="style-desc">
+                            Vibrant sticker overlays with glowing synchronized captions and dynamic scene transitions.
+                        </p>
+                    </div>
+                    <a href="/sticker" class="btn-pill btn-primary btn-block">
+                        Select Sticker Style
+                    </a>
+                </div>
+
+                <!-- Aged Paper Style -->
+                <div class="glass style-card disabled reveal">
+                    <div>
+                        <div class="hero-badge" style="margin-bottom: 0.75rem; color: var(--body-muted); background: rgba(255,255,255,0.05); border-color: var(--glass-border);">Coming Soon</div>
+                        <h2 class="style-title">Aged Paper Style</h2>
+                        <p class="style-desc">
+                            Vintage handwritten text with typewriter keypress sound effects and unfolded paper textures.
+                        </p>
+                    </div>
+                    <button class="btn-pill btn-secondary btn-block" disabled>
+                        Aged Paper Style
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Action CTA -->
+            <div class="reveal" style="text-align: center; margin-bottom: 3rem;">
+                <a href="/sticker" class="btn-pill btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem;">
+                    🚀 Open Sticker Style Generator
+                </a>
+            </div>
+        </main>
+
+        <footer class="footer reveal">
+            Sticker Video Generator — Hackathon 2026
+        </footer>
+    </div>
+
+    <script src="/static/landing.js"></script>
+</body>
+</html>

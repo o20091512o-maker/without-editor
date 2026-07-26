@@ -1,0 +1,25 @@
+{
+  "name": "remotion-sticker-video",
+  "version": "1.0.0",
+  "description": "Sticker Video Generator",
+  "private": true,
+  "dependencies": {
+    "@remotion/bundler": "4.0.499",
+    "@remotion/captions": "4.0.499",
+    "@remotion/cli": "4.0.499",
+    "@remotion/media": "4.0.499",
+    "@remotion/renderer": "4.0.499",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.499"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "19.0.0",
+    "typescript": "5.5.3"
+  },
+  "scripts": {
+    "start": "remotion studio",
+    "build": "remotion bundle"
+  }
+}

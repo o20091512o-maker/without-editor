@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+python-dotenv
+edge-tts
+requests
+pydantic
+gradio_client
+pydub
+Pillow

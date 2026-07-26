@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sticker Style — Sticker Video Generator</title>
+    <link rel="stylesheet" href="/static/flowstate.css">
+</head>
+<body>
+    <div class="bg-canvas"></div>
+    <div class="scrim-overlay"></div>
+
+    <div class="app-viewport">
+        <!-- Header Nav -->
+        <header class="header-nav reveal">
+            <a href="/" class="brand-logo">
+                <span>🌊</span> Sticker Video
+            </a>
+            <a href="/" class="nav-link">
+                ← Back to Styles
+            </a>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <div id="colab-banner" class="offline-banner hidden reveal">
+                ⚠ Colab / Backend service is currently offline!
+            </div>
+
+            <div class="reveal" style="margin-bottom: 2rem;">
+                <div class="hero-badge">
+                    <span>✨</span> Sticker Style Mode
+                </div>
+                <h1>Sticker Video Generator</h1>
+                <p class="subtitle">Upload sticker images, add text captions, and render your AI video</p>
+            </div>
+
+            <!-- Scenes Container -->
+            <div id="scenes-container">
+                <!-- Dynamic Scene Cards injected by app.js -->
+            </div>
+
+            <!-- Scene Controls Bar -->
+            <div class="controls-bar reveal">
+                <button id="add-scene-btn" class="btn-pill btn-secondary" type="button">
+                    + Add Scene
+                </button>
+                <button id="remove-scene-btn" class="btn-pill btn-secondary" type="button" disabled>
+                    - Remove Scene
+                </button>
+            </div>
+
+            <!-- Action Button -->
+            <div class="reveal" style="margin-bottom: 2rem;">
+                <button id="generate-btn" class="btn-pill btn-primary btn-block" type="button" disabled>
+                    ▶ Generate Video
+                </button>
+            </div>
+
+            <!-- Generation Progress & Status -->
+            <div id="status-area" class="glass status-card hidden reveal">
+                <div class="progress-info">
+                    <span>
+                        <span id="spinner" class="spinner"></span>
+                        <strong id="status-text">Starting generation...</strong>
+                    </span>
+                    <span id="progress-percentage" style="font-weight: 700; color: var(--accent-cyan);">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div id="progress-bar-fill" class="progress-fill"></div>
+                </div>
+            </div>
+
+            <!-- Video Output Result -->
+            <div id="result-area" class="glass result-card hidden reveal">
+                <h3 style="margin-bottom: 1rem; color: var(--accent-cyan);">🎉 Your Video is Ready!</h3>
+                <video id="result-video" controls width="100%"></video>
+                <div>
+                    <a id="download-btn" href="#" download="generated_video.mp4" class="btn-pill btn-primary" style="padding: 0.85rem 2rem;">
+                        ⬇ Download Video
+                    </a>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer reveal">
+            Sticker Video Generator — Hackathon 2026
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
