@@ -166,8 +166,11 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
     # Select Remotion composition based on style
     composition_id = "AgedPaperVideo" if style == "aged_paper" else "StickerVideo"
 
-    # Use E: drive for temp files to avoid C: disk full (ENOSPC)
-    remotion_tmp = os.path.join(os.path.dirname(remotion_dir), "remotion_tmp")
+    # Use fast local /tmp on Linux (Colab) to avoid Google Drive FUSE I/O latency
+    if os.name != "nt":
+        remotion_tmp = "/tmp/remotion_fast_tmp"
+    else:
+        remotion_tmp = os.path.join(os.path.dirname(remotion_dir), "remotion_tmp")
     os.makedirs(remotion_tmp, exist_ok=True)
 
     env = os.environ.copy()
