@@ -221,9 +221,13 @@ async def health_colab():
     except Exception:
         return {"status": "offline", "message": "Could not connect to Colab"}
 
-import gradio as gr
-with gr.Blocks(title="Sticker Video Generator") as demo:
-    gr.HTML("<iframe src='/static/index.html' style='width:100%; height:900px; border:none;'></iframe>")
+try:
+    import gradio as gr
+    with gr.Blocks(title="Sticker Video Generator") as demo:
+        gr.HTML("<iframe src='/static/index.html' style='width:100%; height:900px; border:none;'></iframe>")
 
-app = gr.mount_gradio_app(app, demo, path="/")
+    app = gr.mount_gradio_app(app, demo, path="/")
+except Exception as e:
+    pass
+
 
