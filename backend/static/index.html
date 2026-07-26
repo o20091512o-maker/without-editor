@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Style — Sticker Video Generator</title>
+    <title>without-editor — AI Sticker Video Generator</title>
     <link rel="stylesheet" href="/static/flowstate.css">
 </head>
 <body>
@@ -11,64 +11,80 @@
     <div class="scrim-overlay"></div>
 
     <div class="app-viewport">
-        <!-- Header -->
+        <!-- Header Nav -->
         <header class="header-nav reveal">
             <a href="/" class="brand-logo">
-                <span>🌊</span> Sticker Video
+                <span>🌊</span> without-editor
             </a>
         </header>
 
-        <!-- Main Hero -->
+        <!-- Main Content -->
         <main>
             <div id="colab-banner" class="offline-banner hidden reveal">
                 ⚠ Colab / Backend service is currently offline!
             </div>
 
-            <div class="reveal" style="text-align: center; margin-top: 1rem;">
+            <div class="reveal" style="margin-bottom: 2rem;">
                 <div class="hero-badge">
-                    <span>🎬</span> Choose Animation Template
+                    <span>✨</span> Sticker Video Generator
                 </div>
-                <h1>Which style do you want?</h1>
-                <p class="subtitle">Select your preferred video creation style to begin rendering</p>
+                <h1>without-editor</h1>
+                <p class="subtitle">Upload sticker images, add text captions, and generate AI videos effortlessly</p>
             </div>
 
-            <!-- Style Selector Grid -->
-            <div class="style-grid">
-                <!-- Sticker Style (Active) -->
-                <div class="glass style-card reveal">
-                    <div>
-                        <div class="hero-badge" style="margin-bottom: 0.75rem;">Active Style</div>
-                        <h2 class="style-title">Sticker Style</h2>
-                        <p class="style-desc">
-                            Vibrant sticker overlays with glowing synchronized captions and dynamic scene transitions.
-                        </p>
-                    </div>
-                    <a href="/sticker" class="btn-pill btn-primary btn-block">
-                        Select Sticker Style
-                    </a>
-                </div>
+            <!-- Scenes Container -->
+            <div id="scenes-container">
+                <!-- Dynamic Scene Cards injected by app.js -->
+            </div>
 
-                <!-- Aged Paper Style -->
-                <div class="glass style-card disabled reveal">
-                    <div>
-                        <div class="hero-badge" style="margin-bottom: 0.75rem; color: var(--body-muted); background: rgba(255,255,255,0.05); border-color: var(--glass-border);">Coming Soon</div>
-                        <h2 class="style-title">Aged Paper Style</h2>
-                        <p class="style-desc">
-                            Vintage handwritten text with typewriter keypress sound effects and unfolded paper textures.
-                        </p>
-                    </div>
-                    <button class="btn-pill btn-secondary btn-block" disabled>
-                        Aged Paper Style
-                    </button>
+            <!-- Scene Controls Bar -->
+            <div class="controls-bar reveal">
+                <button id="add-scene-btn" class="btn-pill btn-secondary" type="button">
+                    + Add Scene
+                </button>
+                <button id="remove-scene-btn" class="btn-pill btn-secondary" type="button" disabled>
+                    - Remove Scene
+                </button>
+            </div>
+
+            <!-- Action Button -->
+            <div class="reveal" style="margin-bottom: 2rem;">
+                <button id="generate-btn" class="btn-pill btn-primary btn-block" type="button" disabled>
+                    ▶ Generate Video
+                </button>
+            </div>
+
+            <!-- Generation Progress & Status -->
+            <div id="status-area" class="glass status-card hidden reveal">
+                <div class="progress-info">
+                    <span>
+                        <span id="spinner" class="spinner"></span>
+                        <strong id="status-text">Starting generation...</strong>
+                    </span>
+                    <span id="progress-percentage" style="font-weight: 700; color: var(--accent-cyan);">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div id="progress-bar-fill" class="progress-fill"></div>
+                </div>
+            </div>
+
+            <!-- Video Output Result -->
+            <div id="result-area" class="glass result-card hidden reveal">
+                <h3 style="margin-bottom: 1rem; color: var(--accent-cyan);">🎉 Your Video is Ready!</h3>
+                <video id="result-video" controls width="100%"></video>
+                <div>
+                    <a id="download-btn" href="#" download="generated_video.mp4" class="btn-pill btn-primary" style="padding: 0.85rem 2rem;">
+                        ⬇ Download Video
+                    </a>
                 </div>
             </div>
         </main>
 
         <footer class="footer reveal">
-            Sticker Video Generator — Hackathon 2026
+            without-editor — Hackathon 2026
         </footer>
     </div>
 
-    <script src="/static/landing.js"></script>
+    <script src="/static/app.js"></script>
 </body>
 </html>

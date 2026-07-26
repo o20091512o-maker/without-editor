@@ -175,8 +175,7 @@ async def generate(req: GenerateRequest, background_tasks: BackgroundTasks):
             raise HTTPException(status_code=400, detail=f"Image {scene.image_name} not found. Upload first.")
 
     style = req.style or "sticker"
-    if style not in ("sticker", "aged_paper"):
-        raise HTTPException(status_code=400, detail="Invalid style. Use 'sticker' or 'aged_paper'.")
+
 
     job_id = create_job()
     background_tasks.add_task(run_pipeline, job_id, scenes, style)
