@@ -199,46 +199,23 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
     else:
         base_cmd = ["npx.cmd" if os.name == "nt" else "npx", "remotion"]
 
-    # Check / create cached Remotion bundle to eliminate 15-20 second Webpack compilation on every render
-    bundle_dir = os.path.join(remotion_dir, ".build_cache")
-    entry_file = os.path.join(remotion_dir, "index.ts")
-    if not os.path.exists(entry_file):
-        entry_file = os.path.join(remotion_dir, "index.tsx")
-
-    bundle_target = None
-    if os.path.exists(entry_file):
-        if not os.path.exists(bundle_dir) or not os.listdir(bundle_dir):
-            try:
-                print("Pre-bundling Remotion project for fast rendering...")
-                bundle_cmd = base_cmd + ["bundle", entry_file, bundle_dir]
-                subprocess.run(bundle_cmd, cwd=remotion_dir, env=env, timeout=120, capture_output=True)
-            except Exception as e:
-                print(f"Pre-bundle warning: {e}")
-        if os.path.exists(bundle_dir) and os.listdir(bundle_dir):
-            bundle_target = os.path.abspath(bundle_dir)
-
     # Render directly to local /tmp file first to avoid Drive FUSE latency
     if os.name != "nt":
         fast_output_path = f"/tmp/fast_render_{os.path.basename(output_path)}"
     else:
         fast_output_path = output_path + ".fast.mp4"
 
-    render_args = [
+    cmd = base_cmd + [
         "render",
-        bundle_target if bundle_target else composition_id,
-    ]
-    if bundle_target:
-        render_args.append(composition_id)
-
-    cmd = base_cmd + render_args + [
+        composition_id,
         "--props", os.path.abspath(props_file),
         os.path.abspath(fast_output_path),
         "--codec", "h264",
         "--preset", "ultrafast",
         "--crf", "28",
-        "--concurrency", "100%",
-        "--width", "540",
-        "--height", "960",
+        "--concurrency", "2",
+        "--width", "720",
+        "--height", "1280",
         "--pixel-format", "yuv420p",
         "--gl", gl_option,
         "--chromium-flag=--no-sandbox",
