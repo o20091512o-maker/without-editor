@@ -189,25 +189,20 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
     else:
         base_cmd = ["npx.cmd" if os.name == "nt" else "npx", "remotion"]
 
-    # Render to MKV first (fast muxing, no 99% hang), then remux to MP4 via ffmpeg
-    mkv_output = output_path + ".mkv"
-
     cmd = base_cmd + [
         "render",
         composition_id,
         "--props", os.path.abspath(props_file),
-        os.path.abspath(mkv_output),
-        "--codec", "h264-mkv",
-        "--concurrency", "1",
+        os.path.abspath(output_path),
+        "--codec", "h264",
+        "--concurrency", "2",
         "--width", "720",
         "--height", "1280",
         "--pixel-format", "yuv420p",
         "--gl", gl_option,
-        "--timeout", "120000",
         "--chromium-flag=--no-sandbox",
         "--chromium-flag=--disable-setuid-sandbox",
-        "--chromium-flag=--disable-dev-shm-usage",
-        "--chromium-flag=--js-flags=--max-old-space-size=4096"
+        "--chromium-flag=--disable-dev-shm-usage"
     ]
 
     process = subprocess.Popen(
@@ -236,7 +231,7 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
                 try:
                     render_percent = int(matches[-1])
                     if 0 <= render_percent <= 100:
-                        total_percent = 50 + int((render_percent / 100.0) * 48)
+                        total_percent = 50 + int((render_percent / 100.0) * 49)
                         if total_percent != last_rendered_percent:
                             last_rendered_percent = total_percent
                             progress_callback(total_percent)
@@ -246,26 +241,3 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
     if process.returncode != 0:
         error_summary = "\n".join(output_lines[-15:]) if output_lines else "Unknown error"
         raise RuntimeError(f"Remotion render failed (code {process.returncode}):\n{error_summary}")
-
-    # Fast remux MKV → MP4 (no re-encoding, ~1 second)
-    if progress_callback:
-        progress_callback(98)
-
-    ffmpeg_cmd = [
-        "ffmpeg", "-y",
-        "-i", os.path.abspath(mkv_output),
-        "-c:v", "copy",
-        "-c:a", "aac",
-        "-b:a", "192k",
-        os.path.abspath(output_path)
-    ]
-    ffmpeg_result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
-
-    # Cleanup temp MKV
-    try:
-        os.remove(mkv_output)
-    except Exception:
-        pass
-
-    if ffmpeg_result.returncode != 0:
-        raise RuntimeError(f"FFmpeg remux failed: {ffmpeg_result.stderr[-500:]}")
