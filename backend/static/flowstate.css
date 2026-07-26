@@ -447,7 +447,109 @@ video {
   border-top: 1px solid var(--glass-border);
 }
 
+/* Image preview in scene card */
+.img-preview {
+    margin: 0.75rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    max-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.3);
+}
+
+.img-preview img {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 12px;
+    display: block;
+}
+
+/* Floating demo video widget */
+.floating-demo {
+    position: fixed;
+    top: 1rem;
+    right: 1.5rem;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.floating-demo-thumb {
+    width: 96px;
+    height: 56px;
+    background: var(--glass-fill);
+    border: 1.5px solid var(--accent-cyan);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--duration-fast);
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.25);
+    position: relative;
+}
+
+.floating-demo-thumb:hover {
+    transform: scale(1.07);
+    box-shadow: 0 0 28px rgba(0, 229, 255, 0.5);
+    border-color: var(--accent-cyan);
+}
+
+.floating-demo-thumb .play-icon {
+    font-size: 1.6rem;
+    filter: drop-shadow(0 0 6px rgba(0,229,255,0.8));
+}
+
+.floating-demo-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    text-align: center;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    padding: 0.2rem 0.5rem;
+    border-radius: 9999px;
+    backdrop-filter: blur(10px);
+    white-space: nowrap;
+}
+
+/* Coming Soon notice */
+.coming-soon-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    background: rgba(124, 77, 255, 0.08);
+    border: 1px solid rgba(124, 77, 255, 0.35);
+    border-radius: 14px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    color: var(--body-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.coming-soon-notice .notice-icon {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.coming-soon-notice strong {
+    color: var(--accent-violet);
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
 .hidden {
+
   display: none !important;
 }
 

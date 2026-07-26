@@ -73,6 +73,14 @@ document.addEventListener('DOMContentLoaded', () => {
         fileWrapper.appendChild(fileLabel);
         card.appendChild(fileWrapper);
 
+        // Image preview box (hidden until upload succeeds)
+        const imgPreview = document.createElement('div');
+        imgPreview.className = 'img-preview hidden';
+        const imgEl = document.createElement('img');
+        imgEl.alt = 'Scene preview';
+        imgPreview.appendChild(imgEl);
+        card.appendChild(imgPreview);
+
         const textArea = document.createElement('textarea');
         textArea.rows = 3;
         textArea.placeholder = `Enter text for scene ${index + 1} (optional)...`;
@@ -123,6 +131,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusSpan.className = 'upload-status success';
                 fileWrapper.classList.add('uploaded');
                 fileLabel.innerHTML = '<span class="icon">✅</span> ' + file.name;
+
+                // Show image preview
+                const objectUrl = URL.createObjectURL(file);
+                imgEl.src = objectUrl;
+                imgPreview.classList.remove('hidden');
+
                 checkReadyState();
             } catch (err) {
                 statusSpan.textContent = `Error: ${err.message}`;
