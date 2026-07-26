@@ -195,7 +195,7 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
         "--props", os.path.abspath(props_file),
         os.path.abspath(output_path),
         "--codec", "h264",
-        "--concurrency", "2",
+        "--concurrency", "100%",
         "--width", "720",
         "--height", "1280",
         "--pixel-format", "yuv420p",
