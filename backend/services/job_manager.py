@@ -3,10 +3,22 @@ from typing import Dict, Any
 
 jobs: Dict[str, Dict[str, Any]] = {}
 
+MAX_ACTIVE_JOBS = 5
+
+
+def get_active_job_count() -> int:
+    """Count jobs that are currently in-progress (not completed or failed)."""
+    return sum(
+        1 for j in jobs.values()
+        if j.get("status") not in ("completed", "failed", "not_found")
+    )
+
+
 def create_job() -> str:
     job_id = str(uuid.uuid4())
     jobs[job_id] = {"status": "pending", "progress": 0, "output_path": None, "error": None}
     return job_id
+
 
 def update_job_status(job_id: str, status: str, progress: int = None, output_path: str = None, error: str = None):
     if job_id in jobs:
@@ -17,6 +29,7 @@ def update_job_status(job_id: str, status: str, progress: int = None, output_pat
             jobs[job_id]["output_path"] = output_path
         if error:
             jobs[job_id]["error"] = error
+
 
 def get_job_status(job_id: str) -> Dict[str, Any]:
     job = jobs.get(job_id)

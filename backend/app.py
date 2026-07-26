@@ -9,7 +9,7 @@ from typing import List, Optional
 import requests
 from dotenv import load_dotenv
 
-from services.job_manager import create_job, update_job_status, get_job_status
+from services.job_manager import create_job, update_job_status, get_job_status, get_active_job_count, MAX_ACTIVE_JOBS
 from services.tts import generate_audio
 from services.alignment import get_word_timings
 from services.video_render import render_video
@@ -161,6 +161,13 @@ def run_pipeline(job_id: str, scenes: list, style: str = "sticker"):
 
 @app.post("/api/generate")
 async def generate(req: GenerateRequest, background_tasks: BackgroundTasks):
+    # Rate limit: max 5 concurrent active jobs
+    if get_active_job_count() >= MAX_ACTIVE_JOBS:
+        raise HTTPException(
+            status_code=429,
+            detail="Too many active jobs. Please wait for a running job to complete before submitting a new one."
+        )
+
     if req.scenes:
         scenes = req.scenes
     elif req.image_name:
@@ -172,10 +179,9 @@ async def generate(req: GenerateRequest, background_tasks: BackgroundTasks):
     for scene in scenes:
         image_path = os.path.join(TEMP_DIR, scene.image_name)
         if not os.path.exists(image_path):
-            raise HTTPException(status_code=400, detail=f"Image {scene.image_name} not found. Upload first.")
+            raise HTTPException(status_code=400, detail=f"Image not found. Please upload an image for every scene before generating.")
 
     style = req.style or "sticker"
-
 
     job_id = create_job()
     background_tasks.add_task(run_pipeline, job_id, scenes, style)
