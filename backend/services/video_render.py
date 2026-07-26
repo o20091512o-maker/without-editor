@@ -177,9 +177,19 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
 
     gl_option = "angle" if os.name == "nt" else "swangle"
 
-    cmd = [
-        "npx.cmd" if os.name == "nt" else "npx",
-        "remotion",
+    # Find executable: direct node JS file, global remotion executable, or npx fallback
+    remotion_js = os.path.join(remotion_dir, "node_modules", "@remotion", "cli", "bin", "remotion.js")
+    if not os.path.exists(remotion_js):
+        remotion_js = os.path.join(remotion_dir, "node_modules", "remotion", "bin", "remotion.js")
+
+    if os.path.exists(remotion_js):
+        base_cmd = ["node", remotion_js]
+    elif shutil.which("remotion"):
+        base_cmd = ["remotion"]
+    else:
+        base_cmd = ["npx.cmd" if os.name == "nt" else "npx", "remotion"]
+
+    cmd = base_cmd + [
         "render",
         composition_id,
         "--props", os.path.abspath(props_file),
