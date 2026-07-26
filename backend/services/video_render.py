@@ -207,9 +207,7 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
         "--chromium-flag=--no-sandbox",
         "--chromium-flag=--disable-setuid-sandbox",
         "--chromium-flag=--disable-dev-shm-usage",
-        "--chromium-flag=--disable-gpu",
-        "--chromium-flag=--js-flags=--max-old-space-size=4096",
-        "--chromium-flag=--single-process"
+        "--chromium-flag=--js-flags=--max-old-space-size=4096"
     ]
 
     process = subprocess.Popen(
