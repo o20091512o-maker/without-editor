@@ -254,7 +254,9 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
     ffmpeg_cmd = [
         "ffmpeg", "-y",
         "-i", os.path.abspath(mkv_output),
-        "-c", "copy",
+        "-c:v", "copy",
+        "-c:a", "aac",
+        "-b:a", "192k",
         os.path.abspath(output_path)
     ]
     ffmpeg_result = subprocess.run(ffmpeg_cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
