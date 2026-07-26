@@ -171,6 +171,13 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
         remotion_tmp = "/tmp/remotion_fast_tmp"
     else:
         remotion_tmp = os.path.join(os.path.dirname(remotion_dir), "remotion_tmp")
+
+    # Clean old temporary files to keep /tmp fresh and free
+    if os.path.exists(remotion_tmp):
+        try:
+            shutil.rmtree(remotion_tmp, ignore_errors=True)
+        except Exception:
+            pass
     os.makedirs(remotion_tmp, exist_ok=True)
 
     env = os.environ.copy()
@@ -234,7 +241,8 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
                 try:
                     render_percent = int(matches[-1])
                     if 0 <= render_percent <= 100:
-                        total_percent = 50 + int((render_percent / 100.0) * 49)
+                        # Smooth progress: render maps linearly to 50% -> 95% for realistic visual progress
+                        total_percent = 50 + int((render_percent / 100.0) * 45)
                         if total_percent != last_rendered_percent:
                             last_rendered_percent = total_percent
                             progress_callback(total_percent)
