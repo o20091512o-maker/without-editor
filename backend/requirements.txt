@@ -6,5 +6,6 @@ edge-tts
 requests
 pydantic
 gradio_client
+gradio
 pydub
 Pillow
