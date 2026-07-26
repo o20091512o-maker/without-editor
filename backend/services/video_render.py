@@ -199,12 +199,19 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
     else:
         base_cmd = ["npx.cmd" if os.name == "nt" else "npx", "remotion"]
 
+    # Render directly to local /tmp file first to avoid Drive FUSE latency
+    if os.name != "nt":
+        fast_output_path = f"/tmp/fast_render_{os.path.basename(output_path)}"
+    else:
+        fast_output_path = output_path + ".fast.mp4"
+
     cmd = base_cmd + [
         "render",
         composition_id,
         "--props", os.path.abspath(props_file),
-        os.path.abspath(output_path),
+        os.path.abspath(fast_output_path),
         "--codec", "h264",
+        "--crf", "28",
         "--concurrency", "100%",
         "--width", "720",
         "--height", "1280",
@@ -212,7 +219,9 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
         "--gl", gl_option,
         "--chromium-flag=--no-sandbox",
         "--chromium-flag=--disable-setuid-sandbox",
-        "--chromium-flag=--disable-dev-shm-usage"
+        "--chromium-flag=--disable-dev-shm-usage",
+        "--chromium-flag=--disable-extensions",
+        "--chromium-flag=--disable-background-networking"
     ]
 
     process = subprocess.Popen(
@@ -252,3 +261,10 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
     if process.returncode != 0:
         error_summary = "\n".join(output_lines[-15:]) if output_lines else "Unknown error"
         raise RuntimeError(f"Remotion render failed (code {process.returncode}):\n{error_summary}")
+
+    # Move completed video instantly from local /tmp to output path
+    try:
+        shutil.move(fast_output_path, os.path.abspath(output_path))
+    except Exception as e:
+        if os.path.exists(fast_output_path):
+            shutil.copy(fast_output_path, os.path.abspath(output_path))
