@@ -84,10 +84,59 @@ def align_original_words_with_timestamps(original_text: str, whisper_words: list
     return result
 
 
+def _ffmpeg_silent_scene(image_path: str, out_path: str, duration: float = 2.0) -> bool:
+    """Render a static image as video via FFmpeg directly — ~2s, no Chromium needed."""
+    try:
+        cmd = [
+            "ffmpeg", "-y",
+            "-loop", "1",
+            "-i", os.path.abspath(image_path),
+            "-t", str(duration),
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-crf", "28",
+            "-pix_fmt", "yuv420p",
+            "-vf", "scale=720:1280:force_original_aspect_ratio=decrease,pad=720:1280:(ow-iw)/2:(oh-ih)/2:color=black",
+            os.path.abspath(out_path)
+        ]
+        result = subprocess.run(cmd, capture_output=True, timeout=30)
+        return result.returncode == 0
+    except Exception as e:
+        print(f"FFmpeg silent scene error: {e}")
+        return False
+
+
+def _ffmpeg_concat(video_paths: list, out_path: str) -> bool:
+    """Concatenate multiple MP4 files into one using FFmpeg concat demuxer."""
+    try:
+        list_file = out_path + ".concat.txt"
+        with open(list_file, "w") as f:
+            for p in video_paths:
+                f.write(f"file '{os.path.abspath(p)}'\n")
+        cmd = [
+            "ffmpeg", "-y",
+            "-f", "concat",
+            "-safe", "0",
+            "-i", list_file,
+            "-c", "copy",
+            os.path.abspath(out_path)
+        ]
+        result = subprocess.run(cmd, capture_output=True, timeout=120)
+        try:
+            os.remove(list_file)
+        except Exception:
+            pass
+        return result.returncode == 0
+    except Exception as e:
+        print(f"FFmpeg concat error: {e}")
+        return False
+
+
 def render_video(scenes_data: list, output_path: str, style: str = "sticker", progress_callback=None):
     """
-    Prepare multi-scene props, copy assets to Remotion public dir, and run Remotion render with fast concurrency.
-    Supports real-time progress callbacks for exact percentages and automatic temp file cleanup.
+    Smart render: silent-only scenes use FFmpeg directly (~2s each).
+    Mixed scenes: FFmpeg for silent + Remotion for audio, then concat.
+    Supports real-time progress callbacks and automatic temp file cleanup.
     """
     remotion_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "remotion")
     remotion_public_temp = os.path.join(remotion_dir, "public", "temp")
@@ -162,6 +211,44 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
     props_file = output_path + ".props.json"
     with open(props_file, 'w', encoding='utf-8') as f:
         json.dump(props, f, ensure_ascii=False)
+
+    # ---------------------------------------------------------------
+    # FAST PATH: all scenes are silent → skip Remotion entirely
+    # ---------------------------------------------------------------
+    all_silent = all(not s.get("audio_path") for s in scenes_data)
+
+    if all_silent:
+        if progress_callback:
+            progress_callback(60)
+        silent_clips = []
+        for idx, scene in enumerate(scenes_data):
+            clip_path = output_path + f".silent_{idx}.mp4"
+            ok = _ffmpeg_silent_scene(scene["image_path"], clip_path, duration=2.0)
+            if not ok:
+                raise RuntimeError(f"FFmpeg failed on silent scene {idx}")
+            silent_clips.append(clip_path)
+            if progress_callback:
+                progress_callback(60 + int(((idx + 1) / len(scenes_data)) * 35))
+
+        if len(silent_clips) == 1:
+            shutil.move(silent_clips[0], output_path)
+        else:
+            ok = _ffmpeg_concat(silent_clips, output_path)
+            if not ok:
+                raise RuntimeError("FFmpeg concat of silent scenes failed")
+            for p in silent_clips:
+                try:
+                    os.remove(p)
+                except Exception:
+                    pass
+
+        if progress_callback:
+            progress_callback(100)
+        return
+
+    # ---------------------------------------------------------------
+    # MIXED / AUDIO PATH: use Remotion for audio scenes
+    # ---------------------------------------------------------------
 
     # Select Remotion composition based on style
     composition_id = "AgedPaperVideo" if style == "aged_paper" else "StickerVideo"
