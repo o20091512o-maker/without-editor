@@ -134,20 +134,40 @@ def _ffmpeg_concat(video_paths: list, out_path: str) -> bool:
 
 def render_video(scenes_data: list, output_path: str, style: str = "sticker", progress_callback=None):
     """
-    Smart render: silent-only scenes use FFmpeg directly (~2s each).
-    Mixed scenes: FFmpeg for silent + Remotion for audio, then concat.
-    Supports real-time progress callbacks and automatic temp file cleanup.
+    Render all scenes via Remotion (gradient preserved for every scene).
+    Speed optimizations: /tmp asset symlinking, /tmp props, Node max memory, Chromium fast flags.
     """
     remotion_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "remotion")
-    remotion_public_temp = os.path.join(remotion_dir, "public", "temp")
-    
-    # Auto clean temp folders before render to prevent ENOSPC disk full errors
-    if os.path.exists(remotion_public_temp):
+    remotion_public = os.path.join(remotion_dir, "public")
+
+    # --- OPTIMIZATION 1: Route public/temp I/O through /tmp to bypass Drive FUSE latency ---
+    if os.name != "nt":
+        tmp_assets = "/tmp/remotion_public_temp"
+        remotion_public_temp = tmp_assets
+        drive_link = os.path.join(remotion_public, "temp")
+        # Recreate /tmp assets dir fresh
+        if os.path.exists(tmp_assets):
+            shutil.rmtree(tmp_assets, ignore_errors=True)
+        os.makedirs(tmp_assets, exist_ok=True)
+        # Create/refresh symlink: remotion/public/temp → /tmp/remotion_public_temp
+        if os.path.islink(drive_link):
+            os.unlink(drive_link)
+        elif os.path.exists(drive_link):
+            shutil.rmtree(drive_link, ignore_errors=True)
         try:
-            shutil.rmtree(remotion_public_temp)
-        except Exception:
-            pass
-    os.makedirs(remotion_public_temp, exist_ok=True)
+            os.symlink(tmp_assets, drive_link)
+        except Exception as e:
+            print(f"Symlink warning (falling back to Drive): {e}")
+            remotion_public_temp = drive_link
+            os.makedirs(remotion_public_temp, exist_ok=True)
+    else:
+        remotion_public_temp = os.path.join(remotion_public, "temp")
+        if os.path.exists(remotion_public_temp):
+            try:
+                shutil.rmtree(remotion_public_temp)
+            except Exception:
+                pass
+        os.makedirs(remotion_public_temp, exist_ok=True)
 
     scenes_props = []
 
@@ -208,47 +228,13 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
 
     props = {"scenes": scenes_props}
 
-    props_file = output_path + ".props.json"
+    # --- OPTIMIZATION 2: Write props to /tmp instead of Drive ---
+    if os.name != "nt":
+        props_file = f"/tmp/remotion_props_{os.path.basename(output_path)}.json"
+    else:
+        props_file = output_path + ".props.json"
     with open(props_file, 'w', encoding='utf-8') as f:
         json.dump(props, f, ensure_ascii=False)
-
-    # ---------------------------------------------------------------
-    # FAST PATH: all scenes are silent → skip Remotion entirely
-    # ---------------------------------------------------------------
-    all_silent = all(not s.get("audio_path") for s in scenes_data)
-
-    if all_silent:
-        if progress_callback:
-            progress_callback(60)
-        silent_clips = []
-        for idx, scene in enumerate(scenes_data):
-            clip_path = output_path + f".silent_{idx}.mp4"
-            ok = _ffmpeg_silent_scene(scene["image_path"], clip_path, duration=2.0)
-            if not ok:
-                raise RuntimeError(f"FFmpeg failed on silent scene {idx}")
-            silent_clips.append(clip_path)
-            if progress_callback:
-                progress_callback(60 + int(((idx + 1) / len(scenes_data)) * 35))
-
-        if len(silent_clips) == 1:
-            shutil.move(silent_clips[0], output_path)
-        else:
-            ok = _ffmpeg_concat(silent_clips, output_path)
-            if not ok:
-                raise RuntimeError("FFmpeg concat of silent scenes failed")
-            for p in silent_clips:
-                try:
-                    os.remove(p)
-                except Exception:
-                    pass
-
-        if progress_callback:
-            progress_callback(100)
-        return
-
-    # ---------------------------------------------------------------
-    # MIXED / AUDIO PATH: use Remotion for audio scenes
-    # ---------------------------------------------------------------
 
     # Select Remotion composition based on style
     composition_id = "AgedPaperVideo" if style == "aged_paper" else "StickerVideo"
@@ -271,6 +257,8 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
     env["TMPDIR"] = remotion_tmp
     env["TEMP"] = remotion_tmp
     env["TMP"] = remotion_tmp
+    # --- OPTIMIZATION 3: Give Node.js more memory to prevent GC pause stalls ---
+    env["NODE_OPTIONS"] = "--max-old-space-size=4096"
 
     gl_option = "angle" if os.name == "nt" else "swangle"
 
@@ -305,11 +293,23 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
         "--height", "1280",
         "--pixel-format", "yuv420p",
         "--gl", gl_option,
+        # Sandbox & security (required for rootless Colab)
         "--chromium-flag=--no-sandbox",
         "--chromium-flag=--disable-setuid-sandbox",
         "--chromium-flag=--disable-dev-shm-usage",
+        # --- OPTIMIZATION 4: Chromium startup speed flags (zero quality impact) ---
         "--chromium-flag=--disable-extensions",
-        "--chromium-flag=--disable-background-networking"
+        "--chromium-flag=--disable-background-networking",
+        "--chromium-flag=--disable-sync",
+        "--chromium-flag=--disable-translate",
+        "--chromium-flag=--no-first-run",
+        "--chromium-flag=--disable-default-apps",
+        "--chromium-flag=--disable-component-update",
+        "--chromium-flag=--disable-domain-reliability",
+        "--chromium-flag=--safebrowsing-disable-auto-update",
+        "--chromium-flag=--metrics-recording-only",
+        "--chromium-flag=--disable-client-side-phishing-detection",
+        "--chromium-flag=--disable-hang-monitor"
     ]
 
     process = subprocess.Popen(
