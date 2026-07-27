@@ -312,6 +312,17 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
         "--chromium-flag=--disable-hang-monitor"
     ]
 
+    # Use system installed Chromium on Linux/Colab to bypass Google Drive FUSE permission denied
+    browser_exe = os.environ.get("PUPPETEER_EXECUTABLE_PATH")
+    if not browser_exe or not os.path.exists(browser_exe):
+        for candidate in ["/usr/bin/chromium-browser", "/usr/bin/chromium", "/usr/bin/google-chrome"]:
+            if os.path.exists(candidate):
+                browser_exe = candidate
+                break
+
+    if browser_exe and os.path.exists(browser_exe):
+        cmd.extend(["--browser-executable", browser_exe])
+
     process = subprocess.Popen(
         cmd,
         cwd=remotion_dir,
