@@ -318,11 +318,16 @@ def render_video(scenes_data: list, output_path: str, style: str = "sticker", pr
     env["REMOTION_CHROME_CACHE_DIR"] = tmp_chrome_dir
     env["PUPPETEER_CACHE_DIR"] = tmp_chrome_dir
 
-    # Check if a real non-snap chromium binary exists (e.g. /usr/bin/google-chrome)
-    for candidate in ["/usr/bin/google-chrome", "/usr/bin/google-chrome-stable"]:
-        if os.path.exists(candidate):
-            cmd.extend(["--browser-executable", candidate])
-            break
+    # Use chrome binary pre-copied to /tmp at server startup (REMOTION_CHROME_EXEC set in app.py)
+    chrome_exec = os.environ.get("REMOTION_CHROME_EXEC", "")
+    if chrome_exec and os.path.isfile(chrome_exec) and os.access(chrome_exec, os.X_OK):
+        cmd.extend(["--browser-executable", chrome_exec])
+    else:
+        # Fallback: look for real system google-chrome
+        for candidate in ["/usr/bin/google-chrome-stable", "/usr/bin/google-chrome"]:
+            if os.path.exists(candidate):
+                cmd.extend(["--browser-executable", candidate])
+                break
 
     process = subprocess.Popen(
         cmd,

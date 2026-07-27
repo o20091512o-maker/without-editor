@@ -5,6 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 import uuid
+import glob
+import shutil
+import stat
 from typing import List, Optional
 import requests
 from dotenv import load_dotenv
@@ -36,6 +39,51 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 
 # Mount static files for CSS/JS
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
+def setup_chrome_binary():
+    """
+    On Linux (Colab/HF): copy chrome-headless-shell from Google Drive (noexec) to /tmp (exec).
+    Called once at startup so every render finds Chrome ready in /tmp.
+    """
+    if os.name == "nt":
+        return  # Windows: Remotion handles Chrome itself
+
+    # If already set and valid, skip
+    existing = os.environ.get("REMOTION_CHROME_EXEC", "")
+    if existing and os.path.isfile(existing) and os.access(existing, os.X_OK):
+        print(f"Chrome already ready at {existing}")
+        return
+
+    tmp_chrome = "/tmp/chrome-headless-shell"
+
+    # Search for chrome-headless-shell binary in remotion node_modules on Drive
+    remotion_dir = os.path.join(BASE_DIR, "remotion")
+    search_root = os.path.join(remotion_dir, "node_modules", ".remotion")
+
+    chrome_src = None
+    if os.path.exists(search_root):
+        for match in glob.glob(f"{search_root}/**/chrome-headless-shell", recursive=True):
+            if os.path.isfile(match) and not os.path.islink(match):
+                chrome_src = match
+                break
+
+    if chrome_src:
+        try:
+            print(f"Copying chrome binary to /tmp for exec permissions...")
+            shutil.copy2(chrome_src, tmp_chrome)
+            os.chmod(tmp_chrome, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)
+            os.environ["REMOTION_CHROME_EXEC"] = tmp_chrome
+            print(f"✅ Chrome ready at {tmp_chrome}")
+            return
+        except Exception as e:
+            print(f"Chrome copy failed: {e}")
+    else:
+        print("chrome-headless-shell not found in node_modules yet — will be downloaded on first render")
+
+
+# Run chrome setup at startup
+setup_chrome_binary()
 
 
 class SceneItem(BaseModel):
